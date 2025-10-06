@@ -1,0 +1,75 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Singapore PSI Data (Live)</title>
+  <link href="style.css" rel="stylesheet">
+  
+</head>
+<body>
+  <h1>Singapore Real-time PSI Data</h1>
+  <p id="dataTimestamp">Loading data timestamp...</p>
+  <p id="updatedTime">Loading update time...</p>
+
+  <table id="psiTable">
+    <thead>
+      <tr>
+        <th id="headline">Reading Type</th>
+        <th id="headline">North</th>
+        <th id="headline">South</th>
+        <th id="headline">East</th>
+        <th id="headline">West</th>
+        <th id="headline">Central</th>
+        <th id="headline">National</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+  async function loadPSIData() {
+    try {
+      const response = await fetch('https://api.data.gov.sg/v1/environment/psi', { cache: "no-store" });
+      const data = await response.json();
+
+      const readings = data.items[0].readings;
+      const timestamp = data.items[0].timestamp;
+      const updateTime = data.items[0].update_timestamp;
+
+      const tbody = document.querySelector("#psiTable tbody");
+      const updatedTime = document.getElementById("updatedTime");
+      const dataTimestamp = document.getElementById("dataTimestamp");
+
+      tbody.innerHTML = "";
+
+      for (const [key, value] of Object.entries(readings)) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${key}</td>
+          <td>${value.north}</td>
+          <td>${value.south}</td>
+          <td>${value.east}</td>
+          <td>${value.west}</td>
+          <td>${value.central}</td>
+          <td>${value.national}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      const dataTime = new Date(timestamp).toLocaleString("en-SG", { timeZone: "Asia/Singapore" });
+      const updateDisplayTime = new Date(updateTime).toLocaleString("en-SG", { timeZone: "Asia/Singapore" });
+
+      dataTimestamp.textContent = ` Data recorded at: ${dataTime}`;
+      updatedTime.textContent = ` Data last updated at: ${updateDisplayTime}`;
+
+    } catch (error) {
+      console.error("Error fetching PSI data:", error);
+      document.getElementById("updatedTime").textContent = "Error fetching data.";
+    }
+  }
+
+  loadPSIData();
+
+  setInterval(loadPSIData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
